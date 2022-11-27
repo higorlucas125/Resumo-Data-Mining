@@ -1,0 +1,10 @@
+---
+title: "Aula - 1 Introdução"
+---
+Presentando a introdução a materia
+```{r}
+install.packages("genderBR")
+library(genderBR)
+# Essa biblioteca retorna se o nome pertence ao genero masculino ou feminino, assim retornando Male or Female
+get_gender("José")
+```

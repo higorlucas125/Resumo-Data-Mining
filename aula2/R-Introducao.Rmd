@@ -1,0 +1,100 @@
+---
+title: "Aula - 2 R"
+output: html_notebook
+---
+
+```{r}
+#Armazenar em lista de dados
+
+li <- list("Maria","jose","joao",1,2,3)
+li
+
+#Criar tabela
+mat <- matrix(3, ncol=2,nrow=10)
+mat 
+
+
+# Iris tabela
+str(iris)
+
+# Utilizando o plot
+plot(iris)
+
+# Dados categóricos  factor - sem ordem
+estados <- c("DF","MG","MG","PR","CE","PA","MG")
+estados
+
+# Utilizando factor, mostra a quantidade de niveis que pode ser divido e suas repetições 
+estados <- factor(estados)
+str(estados)
+
+# Tipo de dado: orderd - tipo ordinal voce consegue gerenciar o tipo ordinal de qual é maior que o outro conjuno usando string
+ordered(c("quente","frio","gelado","morno","morno","frio","frio"),c("gelado","frio","morno","quente"))
+
+#Tipo de dado: Date
+aniversarioCF <- as.Date("05-10-1988",format="%d-%m-%Y")
+hoje = as.Date("08-17-22",format="%m-%d-%y")
+
+```
+Teste: hipótese "Temos mais homens como docentes na UFU do que mulheres." 
+
+```{r}
+library(tidyverse)
+colunas <- list(col_character(),col_date(format="%d/%m/%Y"),
+                col_factor(),
+                col_factor(),
+                col_skip(),
+                col_factor())
+
+dados <- read_csv2("https://dados.ufu.br/sites/default/files/plan_docentes_ativos.csv", col_types = colunas)
+library(genderBR)
+table(get_gender(dados$nome),useNA = "ifany")
+```
+
+Teste: hipótese "Na FACOM, temos mais homens como docentes na UFU do que mulheres." 
+```{r}
+nomesFACOM <- dados |> 
+              filter(Lotacao == "FACULDADE DE CIENCIA DA COMPUTACAO") |> 
+              select(nome)
+table(get_gender(nomesFACOM$nome))
+```
+
+```{r}
+dados |> filter(Lotacao == "FACULDADE DE CIENCIA DA COMPUTACAO") |>
+         mutate(tempo.de.casa = (hoje - `Data de Ingresso`)/365) |> 
+         select(nome, tempo.de.casa) |> arrange(desc(tempo.de.casa))
+```
+
+
+Hipótese:  descobrir qual faculdade tem maior média de tempo de casa.
+```{r}
+library("dplyr")
+
+data_group <- tempo_de_casa |>                                 # Group data
+  group_by(Lotacao) |>
+  dplyr::summarise(gr_sum = sum(tempo.de.casa))
+
+data_nome <- tempo_de_casa |>                                 # Group data
+    group_by(Lotacao) |>
+    dplyr::summarise(gr_sum = nome) |> as.data.frame()
+
+data_cont_name <- aggregate(cbind(count = gr_sum) ~ Lotacao, 
+                            data = data_nome, 
+                            FUN = function(x){NROW(x)})
+
+
+
+
+
+```
+Media de casa
+```{r}
+library("dplyr")
+library(tidyverse)
+
+media_de_tempo_trabalhado <- data_group |> filter(Lotacao == data_cont_name$Lotacao) |> mutate(quantos.anos =  gr_sum/data_cont_name$count ) |> select(Lotacao, quantos.anos) |> arrange(desc(quantos.anos))
+```
+
+Qual possui o maior tempo de casa na UFU
+```{r}
+tempo_de_casa |> select(Lotacao,nome,tempo.de.casa) |> arrange(desc(tempo.de.casa))
