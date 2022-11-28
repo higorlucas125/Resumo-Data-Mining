@@ -23,9 +23,9 @@ O resumo é para estudar e vai ser feito totalmente com Readme, porém ira ter c
 * [Regras de Associação - FP-Growth][fp_growth]
 * [Regras de Associação - Regras e aplicação][fp_growth]
 * [Agrupamento de Dados][agrup_dados]
-* [Agrupamento de Dados (parte 2)][]
-* [Agrupamento de Dados (parte 3)][]
-* [Agrupamento de Dados (parte 4)][]
+* [Agrupamento de Dados (parte 2)][agrup_dados]
+* [Agrupamento de Dados (parte 3)][agrup_dados]
+* [Agrupamento de Dados (parte 4)][agrup_dados]
 
 O súmario será terá novas atualizações de acordo com o andamento da matéria, cada topico terá um arquivo onde existira um REAMD e um exemplo o explicando. Os topicos levará até o arquivo.
 
