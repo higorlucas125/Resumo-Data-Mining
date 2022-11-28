@@ -1,0 +1,107 @@
+---
+title: "Aula 03 - 23/08/2022"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+Tarefa: descobrir qual faculdade (lotação) tem maior média/mediana... de tempo de casa.
+
+```{r}
+here::i_am("aula03/aula03-23082022.Rmd")
+library(here)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+colunas <- list(col_character(), 
+                col_date(format="%d/%m/%Y"),
+                col_factor(),
+                col_factor(),
+                col_skip(),
+                col_factor())
+
+dados <- read_csv2("https://dados.ufu.br/sites/default/files/plan_docentes_ativos.csv",col_types = colunas)
+
+dados <- janitor::clean_names(dados)
+
+hoje <- Sys.Date()
+
+dados <- mutate(dados, tempo.de.casa = time_length(hoje - data_de_ingresso, unit="year"))
+
+
+```
+
+Vamos fazer a inspeção visual do tempo de casa nas lotações da UFU:
+```{r}
+library(ggplot2)
+
+faculdades_selecionadas <- dados |> filter(lotacao == "FACULDADE DE MATEMATICA" |
+                                           lotacao == "FACULDADE CIENCIAS INTEGRADAS DO PONTAL" |
+                                           lotacao == "FACULDADE DE MEDICINA" |
+                                           lotacao == "FACULDADE DE CIENCIA DA COMPUTACAO")
+
+fig <- ggplot(faculdades_selecionadas)
+fig <- fig + geom_histogram(aes(tempo.de.casa, fill = lotacao))
+fig
+```
+
+Caixas com bigodes: 1 variável contínua e 1 variável discreta
+```{r}
+fig_cx <- ggplot(faculdades_selecionadas, aes(tempo.de.casa, lotacao)) +
+          geom_boxplot()
+fig_cx
+```
+
+Fazendo a sumarização dos dados em termos das médias e medianas de cada lotação
+
+```{r}
+resumo <- dados |> 
+          group_by(lotacao) |> 
+          summarise(mediana = round(median(tempo.de.casa), 2), 
+                    media = mean(tempo.de.casa), 
+                    quantos = n(), 
+                    novo  = min(tempo.de.casa), 
+                    velho = max(tempo.de.casa)) |>
+          arrange(desc(media))
+          
+resumo
+```
+
+
+Hipótese: salários de homens é maior do que de mulheres (salários governo federal)
+
+Vamos usar dados de outubro de 2021.
+Baixamos de: https://www.transparencia.gov.br/download-de-dados/servidores/ (Servidores_SIAPE)
+```{r}
+## aplicamos o comando seguinte para converter a codificação para ASCII perdendo assim os acentos:
+## iconv -f iso8859-1 -t ascii//translit  202110_Remuneracao.csv > 202110_Remuneracao_ascii.csv
+
+remuneracao <- read_csv2(here("aula03","202110_Remuneracao_ascii.csv.gz"))
+remuneracao <- janitor::clean_names(remuneracao)
+
+library(genderBR)
+remuneracao <- mutate(remuneracao, genero = get_gender(nome))
+
+remuneracao |> group_by(genero) |> summarise(media = mean(remuneracao_basica_bruta_r), 
+                                             mediana = median(remuneracao_basica_bruta_r))
+
+ggplot(remuneracao) + geom_boxplot(aes(x = remuneracao_basica_bruta_r, y = genero))
+
+```
+
+Teste de hipótese: 
+Hipótese Nula: assumimos que salarios M e F vêm da mesma distribuição -> tem a mesma média
+Hipótese Alternativa: media de M > media de F
+
+```{r}
+salariosM <- remuneracao |> filter(genero == "Male")
+salariosF <- remuneracao |> filter(genero == "Female")
+wilcox.test(x = salariosM$remuneracao_basica_bruta_r, 
+            y = salariosF$remuneracao_basica_bruta_r,
+            alternative = "greater")
+
+cat("Como p-value < 2.2e-16 então ficamos com a hipótese alternativa.")
+```
+
+
+
